@@ -1,44 +1,43 @@
-# Окружение
+# Environment
 
-Проект реализован с помощью:
+The project was built with help of:
 * open JDK 11 (from [amazon-corretto](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/downloads-list.html))
 * Maven (3.5.3)
 * JUnit 5.7.1
 
-# Описание задачи
+# Task definition
 
-В магазине есть 4 кассы. Очередь к каждой не может превышать 20 человек.
-* На 1 кассе работает стажер и он способен обслужить только 10 покупателей в час.
-* На 2 кассе, специалист со скоростью 13 покупателей в час.
-* На 3 - 15 покупателей в час.
-* На 4 - 17.
+There are 4 cashboxes in a shop. Queue to each cashbox can't exceed 20 people.
+* A trainee works at the 1st cashbox, and he can serve 10 customers per hour only
+* A specialist at the 2nd cashbox can serve 13 customers per hour
+* A specialist at the 3rd cashbox can serve 15 customers per hour
+* at 4th cashbox - 17 customers per hour
 
-Необходимо реализовать конечный автомат, который принимает на вход символы:
-* A = один покупатель идет на кассу и ему необходимо указать в очередь к какой из касс встать.
-* 1 = один покупатель покидает очередь 1 кассы.
-* 2 = покидает очередь 2 кассы.
-* 3 = 3 кассы.
-* 4 = 4 кассы.
+Our task is to implement a finite state machine getting input symbols as follows:
+* A - one customer goes to a cashbox and the system should specify cashbox number where the user should stay
+* 1 = one customer leaves a cashbox number 1
+* 2 = one customer leaves a cashbox number 2
+* 3 = one customer leaves a cashbox number 3
+* 4 = one customer leaves a cashbox number 4 
 
-На выходе КА должен выдать номер кассы, в очередь к которой необходимо встать покупателю так, чтобы проведенное им время в очереди было минимальным.
-
-Пример работы:
+Output: state machine should return a cashbox number where a customer should stay to minimize overall customer's time in queue
+Example:
 input: ААААА
 ouput: 43214
 
-# Описание решения
-* Основной метод, реализующий логику КА - `CashboxDispatcher` 
-  * При создании ему на вход передается список доступных касс `Cashbox`. 
-    * У каждой кассы есть два параметра: номер и время обработки одного посетителя (в секундах)
-    * Список касс может быть получен с помощь метода `CashboxFactory.produce()`
-      * для тестовых целей можно использовать, как фиксированную пропускную способность из задания, так и произвольную для каждой кассы 
-  * За деспетчеризацию пользователей отвечает метод `CashboxDispatcher.dispatch(long time)`.
-    * На вход он получает время (в секундах), когда приходит очередной посетитель. Мне показалось лишним передавать конкретный символ, так как всегда передается фиксированный символ = `А`. Гораздо важнее время, когда он пришел 
-    * В постановке задачи не было сказано с какой интенсивностью пользователи приходят в магазин. Это важный параметр, 
-      так как от интенсивности и пропускной способности каждой кассы зависит, где именно будет обслужен конкретный пользователь.
-      * Поэтому был введен интерфейс `UserFlowGenerator`, который генерит массив точек, когда приходят пользователи
-      * Также было сделано две тестовых реализации:
-        * `EvenUserFlowGenerator` - пример равномерного распределения пользователей на интервале времени
-        * `FixedUserFlowGenerator` - пример, когда мы можем задать конкретное временные точки, когда приходят пользователи
-* Для тестирования был создан класс `CashboxDispatcherUTest`, который проходит по основным тест кейсам
-* Запустить и проверить тесты можно, выполнив в терминале команду `mvn clean test`
+# Solution
+* The main method implementing the logic of state machine is `CashboxDispatcher` 
+  * It gets list of cachboxes `Cashbox` as input param
+    * Each `Cashbox` has 2 params: number and processing time of one customer (in seconds)
+    * Cashboxes list can be retrieved with `CashboxFactory.produce()` method
+      * for the testing purposes you can use as fixed cashbox's throughput as a random specified for a certain cashbox
+  * `CashboxDispatcher.dispatch(long time)` is responsible for customers dispatching
+    * As an input param it gets a time when a customer visit the shop
+    * The most important param is customers intensity (i.e. how often customers come to the shop)
+    * Customers intensity and cashbox's throughput determines where a certain customer should stay
+      * As a result `UserFlowGenerator` interface was introduced - it generates arrays of time points when customers come to the shop
+      * Two implementations of `UserFlowGenerator` were implemented:
+        * `EvenUserFlowGenerator` - even customers distribution
+        * `FixedUserFlowGenerator` - you can specify certain time points when customers come to the shop
+* `CashboxDispatcherUTest` is main test class for unit testing - it verifies main test scenarios
+* Run test - `mvn clean test`
